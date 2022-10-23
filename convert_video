@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Converting video...[$1] to [$3] extension"
+
+# arguments are: source, output_dir, output_ext
+source="$1"
+output_dir="$2"
+output_ext="$3"
+
+# Convert the source vide into the output extension
+ffmpeg -i "$source" -c:v libx264 -crf 23 -preset veryfast -c:a aac -b:a 128k "$output_dir/$(basename "$source" .mp4).$output_ext"

@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Check if FFMPEG is installed
+if ! [ -x "$(command -v ffmpeg)" ]; then
+  echo 'WARNING: ffmpeg is not installed.' >&2
+
+  brew install ffmpeg
+fi
+
+# Read the source path
+read -r -e -p "Source path: " source
+
+# Extract the source directory
+source_dir=$(dirname "$source")
+# check if the source directory exists
+if [ ! -d "$source_dir" ]; then
+  echo "ERROR: Source directory does not exist." >&2
+  exit 1
+fi
+
+# Ask for the output path use the source path if empty
+read -r -e -p "Output path: (leave empty to use the source path) " output_dir
+if [ -z "$output_dir" ]; then
+  output_dir="$source_dir"
+fi
+
+# Ask for the output extension
+read -r -e -p "Output extension: " output_ext
+# Check if the output extension is empty
+if [ -z "$output_ext" ]; then
+  echo "ERROR: Output extension is empty." >&2
+  exit 1
+fi
+
+# Ask for the media type (video or audio)
+read -r -e -p "Media type (video or audio): [v/a] " media_type
+if [ "$media_type" = "v" ]; then
+  media_type="video"
+elif [ "$media_type" = "a" ]; then
+  media_type="audio"
+else
+  media_type="video"
+fi
+
+# Print all data and confirm
+echo "----------------------------------------"
+echo "Source: $source"
+echo "Source directory: $source_dir"
+echo "Output directory: $output_dir"
+echo "Output extension: $output_ext"
+echo "Media type: $media_type"
+read -r -p "Are you sure? [y/N] " response
+
+# Check if the user confirmed
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+  echo "Converting..."
+else
+  echo "Aborting..."
+fi
+
+# Get the converter based on the media type
+if [ "$media_type" = "video" ]; then
+  converter="convert_video"
+else
+  converter="convert_audio"
+fi
+
+# Convert files based on the source type
+if [ -f "$source" ]; then
+  # Convert a single file
+  sh $converter "$source" "$output_dir" "$output_ext"
+elif [ -d "$source" ]; then
+  # Convert all files in a directory
+  for file in "$source"/*; do
+    sh $converter "$file" "$output_dir" "$output_ext"
+  done
+else
+  echo "ERROR: Source is not a file or directory." >&2
+  exit 1
+fi
