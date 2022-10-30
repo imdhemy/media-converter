@@ -7,6 +7,14 @@ if ! [ -x "$(command -v ffmpeg)" ]; then
   exit 1
 fi
 
+convert_audio() {
+  echo "INFO: Converting audio to mp3..."
+}
+
+convert_video() {
+  echo "INFO: Converting video to mp4..."
+}
+
 # Converts all files in the given directory
 convert_directory() {
   echo "INFO: Converting files in directory: $1"
@@ -27,6 +35,27 @@ convert_file() {
   if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"
   fi
+
+  # Ask for MEDIA_TYPE (audio or video) audio is default
+  read -r -e -p "Enter media type (audio or video) (audio): [a/v] " MEDIA_TYPE
+  MEDIA_TYPE=${MEDIA_TYPE:-a}
+
+  if [ "$MEDIA_TYPE" = "a" ]; then
+    MEDIA_TYPE="audio"
+  elif [ "$MEDIA_TYPE" = "v" ]; then
+    MEDIA_TYPE="video"
+  else
+    MEDIA_TYPE="audio"
+  fi
+
+  # Pass the source file and output directory to the appropriate function
+  if [ "$MEDIA_TYPE" = "audio" ]; then
+    convert_audio "$1" "$OUTPUT_DIR"
+  elif [ "$MEDIA_TYPE" = "video" ]; then
+    convert_video "$1" "$OUTPUT_DIR"
+  fi
+
+  exit 0
 }
 
 
@@ -47,7 +76,6 @@ else
   convert_file "$source"
   exit 0
 fi
-
 
 # Extract the source directory
 source_dir=$(dirname "$source")
