@@ -7,8 +7,35 @@ if ! [ -x "$(command -v ffmpeg)" ]; then
   exit 1
 fi
 
+# Converts all files in the given directory
+convert_directory() {
+  echo "INFO: Converting files in directory: $1"
+}
+
+# Converts a single file
+convert_file() {
+  echo "INFO: Converting file: $1"
+}
+
+
 # Read the source path
 read -r -e -p "Source path: " source
+
+# Check if the source path exists
+if ! [ -e "$source" ]; then
+  echo "ERROR: The source path does not exist." >&2
+  exit 1
+fi
+
+# Check if the source path is a directory
+if [ -d "$source" ]; then
+  convert_directory "$source"
+  exit 0
+else
+  convert_file "$source"
+  exit 0
+fi
+
 
 # Extract the source directory
 source_dir=$(dirname "$source")
