@@ -2,9 +2,9 @@
 
 # Check if FFMPEG is installed
 if ! [ -x "$(command -v ffmpeg)" ]; then
-  echo 'WARNING: ffmpeg is not installed.' >&2
-
-  brew install ffmpeg
+  echo "ERROR: ffmpeg is not installed." >&2
+  echo "INFO: You can install ffmpeg by running: \`brew install ffmpeg\`" >&2
+  exit 1
 fi
 
 # Read the source path
