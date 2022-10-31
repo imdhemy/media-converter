@@ -40,6 +40,39 @@ convert_video() {
 # Converts all files in the given directory
 convert_directory() {
   echo "INFO: Converting files in directory: $1"
+
+  # Ask for MEDIA_TYPE (audio or video) audio is default
+  read -r -e -p "Enter media type (audio or video) (audio): [a/v] " MEDIA_TYPE
+  MEDIA_TYPE=${MEDIA_TYPE:-a}
+
+  if [ "$MEDIA_TYPE" = "a" ]; then
+    MEDIA_TYPE="audio"
+  elif [ "$MEDIA_TYPE" = "v" ]; then
+    MEDIA_TYPE="video"
+  else
+    MEDIA_TYPE="audio"
+  fi
+
+  # Ask for INPUT_EXT
+  read -r -e -p "Enter input extension (mp3, mp4, 3gp ...): " INPUT_EXT
+
+  # Ask for OUTPUT_EXT
+  read -r -e -p "Enter output extension (mp3, mp4, 3gp ...): " OUTPUT_EXT
+
+  # OUTPUT_DIR is the same as INPUT_DIR/OUTPUT_EXT
+  OUTPUT_DIR="$1/$OUTPUT_EXT"
+  mkdir -p "$OUTPUT_DIR"
+
+  # Convert all files in the given directory with the given extension
+  for file in "$1"/*."$INPUT_EXT"; do
+    if [ -f "$file" ]; then
+      if [ "$MEDIA_TYPE" = "audio" ]; then
+        convert_audio "$file" "$OUTPUT_DIR" "$OUTPUT_EXT"
+      elif [ "$MEDIA_TYPE" = "video" ]; then
+        convert_video "$file" "$OUTPUT_DIR" "$OUTPUT_EXT"
+      fi
+    fi
+  done
 }
 
 # Converts a single file
@@ -80,10 +113,7 @@ convert_file() {
     read -r -e -p "Enter output extension (e.g mp4, 3gp): " OUTPUT_EXT
     convert_video "$1" "$OUTPUT_DIR" "$OUTPUT_EXT"
   fi
-
-  exit 0
 }
-
 
 # Read the source path
 read -r -e -p "Source path: " source
@@ -101,73 +131,4 @@ if [ -d "$source" ]; then
 else
   convert_file "$source"
   exit 0
-fi
-
-# Extract the source directory
-source_dir=$(dirname "$source")
-# check if the source directory exists
-if [ ! -d "$source_dir" ]; then
-  echo "ERROR: Source directory does not exist." >&2
-  exit 1
-fi
-
-# Ask for the output path use the source path if empty
-read -r -e -p "Output path: (leave empty to use the source path) " output_dir
-if [ -z "$output_dir" ]; then
-  output_dir="$source_dir"
-fi
-
-# Ask for the output extension
-read -r -e -p "Output extension: " output_ext
-# Check if the output extension is empty
-if [ -z "$output_ext" ]; then
-  echo "ERROR: Output extension is empty." >&2
-  exit 1
-fi
-
-# Ask for the media type (video or audio)
-read -r -e -p "Media type (video or audio): [v/a] " media_type
-if [ "$media_type" = "v" ]; then
-  media_type="video"
-elif [ "$media_type" = "a" ]; then
-  media_type="audio"
-else
-  media_type="video"
-fi
-
-# Print all data and confirm
-echo "----------------------------------------"
-echo "Source: $source"
-echo "Source directory: $source_dir"
-echo "Output directory: $output_dir"
-echo "Output extension: $output_ext"
-echo "Media type: $media_type"
-read -r -p "Are you sure? [y/N] " response
-
-# Check if the user confirmed
-if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-  echo "Converting..."
-else
-  echo "Aborting..."
-fi
-
-# Get the converter based on the media type
-if [ "$media_type" = "video" ]; then
-  converter="convert_video"
-else
-  converter="convert_audio"
-fi
-
-# Convert files based on the source type
-if [ -f "$source" ]; then
-  # Convert a single file
-  sh $converter "$source" "$output_dir" "$output_ext"
-elif [ -d "$source" ]; then
-  # Convert all files in a directory
-  for file in "$source"/*; do
-    sh $converter "$file" "$output_dir" "$output_ext"
-  done
-else
-  echo "ERROR: Source is not a file or directory." >&2
-  exit 1
 fi
